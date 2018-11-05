@@ -14,8 +14,8 @@ import os
 # CONSTANTS #
 #############
 
-LOOKAHEAD_DISTANCE = 2 # meters
-VELOCITY = 0.5 # m/s
+LOOKAHEAD_DISTANCE = 1.5 # meters
+VELOCITY = 1 # m/s
 
 
 ###########
