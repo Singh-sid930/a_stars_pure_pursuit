@@ -14,8 +14,8 @@ import os
 # CONSTANTS #
 #############
 
-LOOKAHEAD_DISTANCE = 2 # meters
-VELOCITY = 1 # m/s
+LOOKAHEAD_DISTANCE = 3 # meters
+VELOCITY = 0.2 # m/s
 
 
 ###########
@@ -94,7 +94,7 @@ def callback(data):
 
 
     for i in range(len(x_dif)):
-        dist_arr[i] = np.sqrt(x_dif[i]**2 + y_dif[i]**2)
+        dist_arr[i] = dist((path_points_x[i],path_points_y[i]),(x,y))
 
 
     ##finding those points which are less than the look ahead distance (will be behind and ahead of the vehicle)
@@ -115,7 +115,7 @@ def callback(data):
         #print(goal) 
 
 
-    ##finding the distance of the goal point from the vehicle coordinates
+    ##finding the distance of the goal point from the vehicle coordinatesr
 
 
     L = dist_arr[goal]
