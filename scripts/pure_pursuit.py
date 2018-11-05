@@ -14,8 +14,8 @@ import os
 # CONSTANTS #
 #############
 
-LOOKAHEAD_DISTANCE = 3 # meters
-VELOCITY = 0.2 # m/s
+LOOKAHEAD_DISTANCE = 2 # meters
+VELOCITY = 0.5 # m/s
 
 
 ###########
@@ -93,13 +93,14 @@ def callback(data):
     ## finding the distance of each way point from the current position 
 
 
-    for i in range(len(x_dif)):
+    for i in range(len(path_points_x)):
         dist_arr[i] = dist((path_points_x[i],path_points_y[i]),(x,y))
 
 
     ##finding those points which are less than the look ahead distance (will be behind and ahead of the vehicle)
 
-    goal_arr = np.where(dist_arr<LOOKAHEAD_DISTANCE)[0] 
+    goal_arr = np.where( dist_arr<LOOKAHEAD_DISTANCE)[0]
+    print(goal)
 
 
     ##finding the goal point which is the last in the set of points less than the lookahead distance
@@ -115,12 +116,12 @@ def callback(data):
         #print(goal) 
 
 
-    ##finding the distance of the goal point from the vehicle coordinatesr
+    # ##finding the distance of the goal point from the vehicle coordinatesr
 
 
-    L = dist_arr[goal]
+    L=dist_arr[goal]
 
-    ##Transforming the goal point into the vehicle coordinate frame 
+    # ##Transforming the goal point into the vehicle coordinate frame 
 
     xx_trans=path_points_x[goal]* math.cos(yaw)
     xy_trans=-path_points_y[goal]* math.sin(yaw)
@@ -132,46 +133,23 @@ def callback(data):
     goal_x_veh_coord = xx_trans + xy_trans - x
     goal_y_veh_coord = yx_trans + yy_trans - y 
 
+    alpha = path_points_w[goal] -(-yaw)
+
+    k = 2 * math.sin(alpha)/L
 
 
 
     
-    angle_i = (2*goal_y_veh_coord)/L**2
+    angle_i = math.atan(k*0.4)
 
     print(path_points_x[goal],path_points_y[goal],path_points_w[goal])
     print(x,y,180*yaw/math.pi)
-    print(goal_y_veh_coord,angle_i)
-    print("*******")
-
-
-
     
-
-
-
-    # Note: These following numbered steps below are taken from R. Craig Coulter's paper on pure pursuit.
-
-    # 1. Determine the current location of the vehicle (we are subscribed to vesc/odom)
-    # Hint: Read up on PoseStamped message type in ROS to determine how to extract x, y, and yaw.
-    
-
-        
-
-    # 2. Find the pat point closest to the vehicle that is >= 1 lookahead distance from vehicle's current location.
-
-
-
-    # 3. Transform the goal point to vehicle coordinates. 
-    
-    
-
-    # 4. Calculate the curvature = 1/r = 2x/l^2
-    # The curvature is transformed into steering wheel angle by the vehicle on board controller.
-    # Hint: You may need to flip to negative because for the VESC a right steering angle has a negative value.
-
-
+  
     angle = angle_i
     angle = np.clip(angle, -0.4189, 0.4189) # 0.4189 radians = 24 degrees because car can only turn 24 degrees max
+    print(goal_y_veh_coord,angle)
+    print("*******")
 
     msg = drive_param()
     msg.velocity = VELOCITY
