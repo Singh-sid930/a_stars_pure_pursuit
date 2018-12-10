@@ -3,7 +3,7 @@
 import rospy
 from race.msg import drive_param
 from geometry_msgs.msg import PoseStamped
-from geometry_msgs.msg import Point
+from geometry_msgs.msg import Vector3
 import math
 import numpy as np
 from numpy import linalg as la
@@ -16,17 +16,16 @@ class pure_pursuit:
     def __init__(self):
 
         self.LOOKAHEAD_DISTANCE = 1.5 # meters
-        self.VELOCITY = 2.0 # m/s
+        self.VELOCITY = 1.5 # m/s
         self.goal = 0
         self.read_waypoints()
         self.msg = drive_param()
+        self.msg1 = Vector3()
         self.msg.velocity = 1.5
 
         # Publisher for 'drive_parameters' (speed and steering angle)
         self.pub = rospy.Publisher('drive_parameters', drive_param, queue_size=1)
-
-	#Publisher for the goal point
-	self.goal_pub = rospy.Publisher('/waypoint/goal', Point, queue_size=1)
+        self.pub1 = rospy.Publisher('goal_topic', Vector3, queue_size=1)
 
         rospy.Subscriber('/pf/viz/inferred_pose', PoseStamped, self.callback, queue_size=1)
 
@@ -34,8 +33,7 @@ class pure_pursuit:
     def read_waypoints(self):
 
         dirname  = os.path.dirname(__file__)
-        filename = os.path.join(dirname, '../waypoints/waypoints_track1.csv')
-        #filename = os.path.join(dirname, '../waypoints/levine-waypoints.csv')
+        filename = os.path.join(dirname, '../waypoints/waypoints_0.csv')
 
         with open(filename) as f:
             path_points = [tuple(line) for line in csv.reader(f)]
@@ -87,7 +85,7 @@ class pure_pursuit:
             v1 = [self.path_points_x[idx]-x , self.path_points_y[idx]-y]
             v2 = [np.cos(yaw), np.sin(yaw)]
             temp_angle = self.find_angle(v1,v2)
-            if abs(temp_angle) < np.pi/2:
+            if abs(temp_angle) < np.pi/3:
                 self.goal = idx
                 # print(self.goal)
                 break
@@ -96,38 +94,44 @@ class pure_pursuit:
 
         L = self.dist_arr[self.goal]
 
-        ##Transforming the goal point into the vehicle coordinate frame 
+
+
+        ##Transforming the goal point into the vehicle coordinate frame #######################
 
         gvcx = self.path_points_x[self.goal] - x
         gvcy = self.path_points_y[self.goal] - y 
         goal_x_veh_coord = gvcx*np.cos(yaw) + gvcy*np.sin(yaw)
         goal_y_veh_coord = gvcy*np.cos(yaw) - gvcx*np.sin(yaw)
+        self.msg1.x =  goal_x_veh_coord
+        self.msg1.y =  goal_y_veh_coord
+        self.msg1.z =  self.path_points_w[self.goal]
+
 
         # math: find the curvature and the angle 
         alpha = self.path_points_w[self.goal] - (yaw)
         k = 2 * math.sin(alpha)/L
-        angle_i = math.atan(k*0.4)
+        angle_i = math.atan(k*0.33)
 
-        angle = angle_i/2.05
+        angle = angle_i  
+        angle = angle *4
         angle = np.clip(angle, -0.4189, 0.4189) # 0.4189 radians = 24 degrees because car can only turn 24 degrees max
 
-        self.set_speed(angle)
-        # self.const_speed(angle)
+        # self.set_speed(angle)
+        self.const_speed(angle)
 
-	#publish the goal in the vehicle coordinates. 
-	goalPoint = Point(float(goal_x_veh_coord),float(goal_y_veh_coord),float(angle));
-	self.goal_pub.publish(goalPoint)
-
-        # print functions for DEBUGGING
-        print(self.path_points_x[self.goal],self.path_points_y[self.goal],self.path_points_w[self.goal])
+        # print functions for DEBUGGI
+        print(self.goal)
+        print(goal_x_veh_coord,goal_y_veh_coord,self.path_points_w[self.goal])
         print(x,y,180*yaw/math.pi)
         print(goal_y_veh_coord,angle)
-        print(self.LOOKAHEAD_DISTANCE,self.msg.velocity)
         print("*******")
+
+
 
     def send_command(self):
 
-       # self.pub.publish(self.msg)
+        # self.pub.publish(self.msg)
+        self.pub1.publish(self.msg1)
 
     # USE THIS FUNCTION IF CHANGEABLE SPEED IS NEEDED
     def set_speed(self,angle):
@@ -140,17 +144,17 @@ class pure_pursuit:
                 self.msg.velocity -= 0.5
 
         else:
-            self.LOOKAHEAD_DISTANCE = 1.0
+            self.LOOKAHEAD_DISTANCE = 1
             # self.msg.velocity = 3.0
             self.msg.angle = angle
 
-            if self.VELOCITY - self.msg.velocity > 0.2:
+            if 1.5 - self.msg.velocity > 0.2:
                 self.msg.velocity += 0.2
 
     # USE THIS FUNCTION IF CONSTANT SPEED IS NEEDED
     def const_speed(self,angle):
-        self.LOOKAHEAD_DISTANCE = 1
-        self.msg.angle = angle
+        self.LOOKAHEAD_DISTANCE = 2  
+        self.msg.angle = angle 
         self.msg.velocity = self.VELOCITY
 
     # find the angle bewtween two vectors    
@@ -161,9 +165,9 @@ class pure_pursuit:
 
 
 if __name__ == '__main__':
-    rospy.init_node('pure_pursuit')
+    rospy.init_node('pure_pursuit2')
     C = pure_pursuit()  
-    r = rospy.Rate(40)
+    r = rospy.Rate(10)
 
     while not rospy.is_shutdown():
         C.send_command()

@@ -24,15 +24,33 @@ import rospy
 from race.msg import drive_param
 from geometry_msgs.msg import PoseStamped
 from geometry_msgs.msg import Vector3
+from geometry_msgs.msg import Point
 import math
 from numpy import linalg as la
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
 
 ts = 0.25
+x_goal = 0
+y_goal = 0
+w_goal = 0 
+x_curr = 0
+y_curr = 0
+w_curr = 0
 
 
+pub = rospy.Publisher('velocity_omega',Vector3 , queue_size=5)
+pub2 = rospy.Publisher('vehicle_Goal',Vector3 , queue_size=5)
+pub3 = rospy.Publisher('drive_parameters', drive_param, queue_size=1)
+vel_msg = Vector3()
+goal_msg = Vector3()
+drive_msg = drive_param()
 
-def callbaback1(data):
+
+def callback1(data):
+	global x_curr
+	global y_curr
+	global w_curr
+
 	qx=data.pose.orientation.x
 	qy=data.pose.orientation.y
 	qz=data.pose.orientation.z
@@ -44,64 +62,59 @@ def callbaback1(data):
 	w_curr     = euler[2] 
 	x_curr = data.pose.position.x
 	y_curr = data.pose.position.y
-	setValues1(self,x_curr,y_curr,w_curr)
+	
+def callback2(data):
 
-def callbaback2(data):
+	global x_goal
+	global y_goal
+	global w_goal
+
 	x_goal = data.x
 	y_goal = data.y
-	w_goal = data.w
+	w_goal = data.z 
 
-
-
-
-
+def check_omega (w_g):
+	global w_curr
+	if w_g==-0.25:
+		return -0.25
+	elif w_g == 2.89:
+		return 2.89
+	else:
+		return w_curr
 
 class hs071(object):
+	global ts
+	global x_goal
+	global y_goal
+	global w_goal
+
 
 	def __init__(self):
-		self.x_goal = 0
-		self.y_goal = 0 
-		self.w_goal = 0
-		self.x_curr = 0
-		self.y_curr = 0
-		self.w_curr = 0
-	
-	def setValues(self,xg,yg,wg):
-		self.x_goal = xg
-		self.y_goal = yg
-		self.w_goal = wg
+		pass
 
-	def setValues1(self,xc,yc,wc):
-		self.x_curr = xc
-		self.y_curr = yc
-		self.w_curr = wc
-	
 	def objective(self, x):
-		#
-		# The callback for calculating the objective
-		#
 
 		# return x[0] * x[3] * np.sum(x[0:3]) + x[2]
-		return ((2 - np.sum(x[0]*np.cos(x[1:])*ts)) + 4*(2 - np.sum(x[0]*np.sin(x[1:])*ts)) + ((x[5]-x[4])+(x[4]-x[3])+(x[3]-x[2])+(x[2]-x[1])+x[1]))
+		return (x_goal - np.sum(x[0]*np.cos(x[1:])*ts) + (y_goal - np.sum(x[0]*np.sin(x[1:])*ts)) + ((x[5]-x[4])+(x[4]-x[3])+(x[3]-x[2])+(x[2]-x[1])+x[1]))
 		
 	def gradient(self, x):
 		#
 		# The callback for calculating the gradient
 		# #
 		return np.array([
-					 1-np.sum(np.cos(x[1:])*ts) - np.sum(np.sin(x[1:])*ts), 
-					 -1 - (ts * x[0]*np.cos(x[1])) + (ts * x[0]*np.sin(x[1])),
+					 -	np.sum(np.cos(x[1:])*ts) - np.sum(np.sin(x[1:])*ts), 
+					 - (ts * x[0]*np.cos(x[1])) + (ts * x[0]*np.sin(x[1])),
 					 - (ts * x[0]*np.cos(x[2])) + (ts * x[0]*np.sin(x[2])),
 					 - (ts * x[0]*np.cos(x[3])) + (ts * x[0]*np.sin(x[3])), 
 					 - (ts * x[0]*np.cos(x[4])) + (ts * x[0]*np.sin(x[4])), 
 					 1 - (ts * x[0]*np.cos(x[5])) + (ts * x[0]*np.sin(x[5]))
 					 ])
 	
-	def constraints(self, x):
+	def constraints(self, x):																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																														
 		#
 		# The callback for calculating the constraints
 		#
-		return np.array([x[5]-x[4] , x[4]-x[3] , x[3]-x[2]  ,  x[2]-x[1],  x[5]  , x[1] , (2 - np.sum(x[0]*np.cos(x[1:])*ts)) , (2 - np.sum(x[0]*np.sin(x[1:])*ts))])
+		return np.array([x[5]-x[4] , x[4]-x[3] , x[3]-x[2]  ,  x[2]-x[1],  x[5]  , x[1] , x_goal - np.sum(x[0]*np.cos(x[1:])*ts) , y_goal - np.sum(x[0]*np.sin(x[1:])*ts)])
 	
 	def jacobian(self, x):
 		#
@@ -141,23 +154,33 @@ class hs071(object):
 		# Example for the use of the intermediate callback.
 		#
 		# print("*****************************************")
-		print("Objective value at iteration #%d is - %g" % (iter_count, obj_value))
+		# print("Objective value at iteration #%d is - %g" % (iter_count, obj_value))
+		pass
 
 
 def main():
-	rospy.init_node('optimiz_node', anonymous=True)	
-	rospy.Subscriber('/pf/viz/inferred_pose', PoseStamped, callback1, queue_size=1)
-	rospy.Subscriber('/goal_topic', Vector3, callback2, queue_size=1)
-	#
+	global x_goal
+	global y_goal
+	global w_goal
+	global w_curr
+
+	
+
+	# w_curr1 =  check_omega(w_goal)
+
+
+
 	# Define the problem
 	#
 	x0 = [0, 0, 0, 0, 0 ,0 ]
 	
 	lb = [0, -3, -3, -3, -3, -3 ]
 	ub = [8, 3, 3, 3, 3 , 3 ]
+
+
 	
-	cl = [-0.418, -0.428,-0.428, -0.428, 0 ,-0.1, 0 , 0 ]
-	cu = [0.428, 0.428,0.428, 0.428,  0 , 0.1, 100 , 100]
+	cl = [-0.418, -0.428,-0.428, -0.428, abs(w_goal - w_curr)-0.15,-0.4, 0 , 0 ]
+	cu = [0.428, 0.428,0.428, 0.428,  abs(w_goal - w_curr)+0.15 , +0.4, 100 , 100]
 
 	nlp = ipopt.problem(
 				n=len(x0),
@@ -187,10 +210,37 @@ def main():
 	
 	#
 	# Solve the problem
-	#
+	
 	x, info = nlp.solve(x0)
 	
 	# print("Solution of the primal variables: x=%s\n" % repr(x))
+	vel = float(x[0])
+	omega = float(x[1])
+	vel_msg.x = vel/2
+	vel_msg.y = omega
+	vel_msg.z = w_curr
+
+	pub.publish(vel_msg)
+
+	goal_msg.x = x_goal
+	goal_msg.y = y_goal
+	goal_msg.z = w_goal
+
+	pub2.publish(goal_msg)
+
+	if vel <0.5:
+		vel = 0.3
+
+	# if omega == 0.4000:
+	# 	omega 	= 0.1
+	
+	omega = omega
+	omega = np.clip(omega, -0.4189, 0.4189)
+
+
+	drive_msg.velocity = vel
+	drive_msg.angle = omega
+	pub3.publish(drive_msg)
 
 	# x_coord = np.zeros(6)
 	# y_coord = np.zeros(6)
@@ -205,7 +255,7 @@ def main():
 	# x_coord[5] = xdist + x[0] * np.cos(x[5]) *ts
 	# y_coord[5] = ydist + x[0] * np.sin(x[5]) *ts
 
-	# plt.plot(y_coord,x_coord)
+	# plt.plot(y_coord,x_coord)r
 	# plt.show()
 
 
@@ -217,8 +267,10 @@ def main():
 
 
 if __name__ == '__main__':
-	main()
-	r = rospy.Rate(40)
+	rospy.init_node('optimizer')
+	rospy.Subscriber('/pf/viz/inferred_pose', PoseStamped, callback1)
+	rospy.Subscriber('/waypoint/next', Point, callback2)
+	r = rospy.Rate(10)
 	while not rospy.is_shutdown():
 		main()
 		r.sleep()
