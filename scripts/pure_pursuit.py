@@ -3,6 +3,7 @@
 import rospy
 from race.msg import drive_param
 from geometry_msgs.msg import PoseStamped
+from geometry_msgs.msg import Point
 import math
 import numpy as np
 from numpy import linalg as la
@@ -23,6 +24,9 @@ class pure_pursuit:
 
         # Publisher for 'drive_parameters' (speed and steering angle)
         self.pub = rospy.Publisher('drive_parameters', drive_param, queue_size=1)
+
+	#Publisher for the goal point
+	self.goal_pub = rospy.Publisher('/waypoint/goal', Point, queue_size=1)
 
         rospy.Subscriber('/pf/viz/inferred_pose', PoseStamped, self.callback, queue_size=1)
 
@@ -112,14 +116,16 @@ class pure_pursuit:
         self.set_speed(angle)
         # self.const_speed(angle)
 
+	#publish the goal in the vehicle coordinates. 
+	goalPoint = Point(float(goal_x_veh_coord),float(goal_y_veh_coord),float(angle));
+	self.goal_pub.publish(goalPoint)
+
         # print functions for DEBUGGING
         print(self.path_points_x[self.goal],self.path_points_y[self.goal],self.path_points_w[self.goal])
         print(x,y,180*yaw/math.pi)
         print(goal_y_veh_coord,angle)
         print(self.LOOKAHEAD_DISTANCE,self.msg.velocity)
         print("*******")
-
-
 
     def send_command(self):
 
