@@ -3,12 +3,12 @@
 	<include file="$(find racecar)/launch/teleop.launch"/>
   	
   	<!-- Run map server -->
-	<arg name="map_file" default="$(find localization)/maps/levine.yaml"/>
+	<arg name="map_file" default="$(find a_stars_pure_pursuit)/maps/track_2.yaml"/>
 	<node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)" />
 
   	<node pkg="tf2_ros" type="static_transform_publisher" name="base_footprint_to_laser" args="0 0 0 0 0 0 			base_footprint laser" output="screen"/>
   	
-  	<node pkg="rviz" type="rviz" name="rviz" args="-d $(find lab_pure_pursuit)/rviz_cfg/particle_filter.rviz" output="screen"/>
+  	<node pkg="rviz" type="rviz" name="rviz" args="-d $(find a_stars_pure_pursuit)/rviz_cfg/particle_filter.rviz" output="screen"/>
   	
 <!--	Publish initial pose to /initialpose topic so don't have to manually set in rviz each time  	-->
 	<node pkg="rostopic" type="rostopic" name="rostopic" args="pub initialpose geometry_msgs/PoseWithCovarianceStamped '
@@ -77,9 +77,10 @@
 		<param name="rangelib_variant" value="2"/>
 	</node>
 
-    	<node pkg="lab_pure_pursuit" name="visualize_markers_node" type="visualize_markers.py" output="screen"/>
-	<node pkg="lab_pure_pursuit" name="dead_mans_switch" type="dead_mans_switch.py" output="screen"/>
-	<node pkg="lab_pure_pursuit" name="pure_pursuit" type="pure_pursuit.py" output="screen"/>
+    	<node pkg="a_stars_pure_pursuit" name="visualize_markers_node" type="visualize_markers.py" output="screen"/>
+	<node pkg="a_stars_pure_pursuit" name="dead_mans_switch" type="dead_mans_switch.py" output="screen"/>
+	<node pkg="a_stars_pure_pursuit" name="pure_pursuit" type="pure_pursuit.py" output="screen"/>
+	<node pkg="waypoint_logger" name="waypoint_logger" type="waypoint_logger.py" output="screen"/>
 
 
 </launch>

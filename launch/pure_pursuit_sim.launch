@@ -7,7 +7,7 @@
   	</include>
   
   	<!-- Run map server -->
-	<arg name="map_file" default="$(find a_stars_pure_pursuit)/maps/levine.yaml"/>
+	<arg name="map_file" default="$(find a_stars_pure_pursuit)/maps/track_2.yaml"/>
 	<node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)" />
 
 	<node pkg="a_stars_pure_pursuit" name="remap_gazebo_pose_node" type="remap_gazebo_pose.py" output="screen" />

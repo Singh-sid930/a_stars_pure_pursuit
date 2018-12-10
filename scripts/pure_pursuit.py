@@ -15,7 +15,7 @@ class pure_pursuit:
     def __init__(self):
 
         self.LOOKAHEAD_DISTANCE = 1.5 # meters
-        self.VELOCITY = 1 # m/s
+        self.VELOCITY = 2.0 # m/s
         self.goal = 0
         self.read_waypoints()
         self.msg = drive_param()
@@ -30,7 +30,8 @@ class pure_pursuit:
     def read_waypoints(self):
 
         dirname  = os.path.dirname(__file__)
-        filename = os.path.join(dirname, '../waypoints/levine-waypoints.csv')
+        filename = os.path.join(dirname, '../waypoints/waypoints_track1.csv')
+        #filename = os.path.join(dirname, '../waypoints/levine-waypoints.csv')
 
         with open(filename) as f:
             path_points = [tuple(line) for line in csv.reader(f)]
@@ -82,7 +83,7 @@ class pure_pursuit:
             v1 = [self.path_points_x[idx]-x , self.path_points_y[idx]-y]
             v2 = [np.cos(yaw), np.sin(yaw)]
             temp_angle = self.find_angle(v1,v2)
-            if abs(temp_angle) < np.pi/3:
+            if abs(temp_angle) < np.pi/2:
                 self.goal = idx
                 # print(self.goal)
                 break
@@ -105,7 +106,7 @@ class pure_pursuit:
         k = 2 * math.sin(alpha)/L
         angle_i = math.atan(k*0.4)
 
-        angle = angle_i * 5
+        angle = angle_i/2.05
         angle = np.clip(angle, -0.4189, 0.4189) # 0.4189 radians = 24 degrees because car can only turn 24 degrees max
 
         self.set_speed(angle)
@@ -127,7 +128,7 @@ class pure_pursuit:
     # USE THIS FUNCTION IF CHANGEABLE SPEED IS NEEDED
     def set_speed(self,angle):
         if (abs(angle)>0.2018):
-            self.LOOKAHEAD_DISTANCE = 1.5
+            self.LOOKAHEAD_DISTANCE = 2
             # self.msg.velocity = 1.5
             self.msg.angle = angle
 
@@ -135,16 +136,16 @@ class pure_pursuit:
                 self.msg.velocity -= 0.5
 
         else:
-            self.LOOKAHEAD_DISTANCE = 3.0
+            self.LOOKAHEAD_DISTANCE = 1.0
             # self.msg.velocity = 3.0
             self.msg.angle = angle
 
-            if 2.5 - self.msg.velocity > 0.2:
+            if self.VELOCITY - self.msg.velocity > 0.2:
                 self.msg.velocity += 0.2
 
     # USE THIS FUNCTION IF CONSTANT SPEED IS NEEDED
     def const_speed(self,angle):
-        self.LOOKAHEAD_DISTANCE = 2.0
+        self.LOOKAHEAD_DISTANCE = 1
         self.msg.angle = angle
         self.msg.velocity = self.VELOCITY
 
