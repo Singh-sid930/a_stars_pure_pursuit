@@ -126,8 +126,8 @@ class pure_pursuit:
        # print("*******")
 
     def send_command(self):
-
-       self.pub.publish(self.msg)
+	pass
+       #self.pub.publish(self.msg)
 
     # USE THIS FUNCTION IF CHANGEABLE SPEED IS NEEDED
     def set_speed(self,angle):
@@ -166,5 +166,5 @@ if __name__ == '__main__':
     r = rospy.Rate(40)
 
     while not rospy.is_shutdown():
-        #C.send_command()
+        C.send_command()
         r.sleep()
