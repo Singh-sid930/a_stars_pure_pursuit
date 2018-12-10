@@ -257,9 +257,6 @@ def main():
 
 	# plt.plot(y_coord,x_coord)r
 	# plt.show()
-
-
-
 	
 	# print("Solution of the dual variables: lambda=%s\n" % repr  (info['mult_g']))
 	

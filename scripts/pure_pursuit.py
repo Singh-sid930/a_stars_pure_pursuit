@@ -119,15 +119,15 @@ class pure_pursuit:
 	self.goal_pub.publish(goalPoint)
 
         # print functions for DEBUGGING
-        print(self.path_points_x[self.goal],self.path_points_y[self.goal],self.path_points_w[self.goal])
-        print(x,y,180*yaw/math.pi)
-        print(goal_y_veh_coord,angle)
-        print(self.LOOKAHEAD_DISTANCE,self.msg.velocity)
-        print("*******")
+       # print(self.path_points_x[self.goal],self.path_points_y[self.goal],self.path_points_w[self.goal])
+       # print(x,y,180*yaw/math.pi)
+       # print(goal_y_veh_coord,angle)
+       # print(self.LOOKAHEAD_DISTANCE,self.msg.velocity)
+       # print("*******")
 
     def send_command(self):
 
-       # self.pub.publish(self.msg)
+       self.pub.publish(self.msg)
 
     # USE THIS FUNCTION IF CHANGEABLE SPEED IS NEEDED
     def set_speed(self,angle):
@@ -166,5 +166,5 @@ if __name__ == '__main__':
     r = rospy.Rate(40)
 
     while not rospy.is_shutdown():
-        C.send_command()
+        #C.send_command()
         r.sleep()
