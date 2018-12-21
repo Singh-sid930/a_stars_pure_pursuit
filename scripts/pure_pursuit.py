@@ -16,7 +16,7 @@ class pure_pursuit:
     def __init__(self):
 
         self.LOOKAHEAD_DISTANCE = 1.5 # meters
-        self.VELOCITY = 2.0 # m/s
+        self.VELOCITY = 1.5 # m/s
         self.goal = 0
         self.read_waypoints()
         self.msg = drive_param()
@@ -34,7 +34,7 @@ class pure_pursuit:
     def read_waypoints(self):
 
         dirname  = os.path.dirname(__file__)
-        filename = os.path.join(dirname, '../waypoints/waypoints_track1.csv')
+        filename = os.path.join(dirname, '../waypoints/levine-waypoints.csv')
         #filename = os.path.join(dirname, '../waypoints/levine-waypoints.csv')
 
         with open(filename) as f:
@@ -108,11 +108,11 @@ class pure_pursuit:
         k = 2 * math.sin(alpha)/L
         angle_i = math.atan(k*0.4)
 
-        angle = angle_i/2.05
+        angle = angle_i*2
         angle = np.clip(angle, -0.4189, 0.4189) # 0.4189 radians = 24 degrees because car can only turn 24 degrees max
 
-        self.set_speed(angle)
-        # self.const_speed(angle)
+        #self.set_speed(angle)
+        self.const_speed(angle)
 
 	#publish the goal in the vehicle coordinates. 
 	goalPoint = Point(float(goal_x_veh_coord),float(goal_y_veh_coord),float(angle));
@@ -126,8 +126,7 @@ class pure_pursuit:
        # print("*******")
 
     def send_command(self):
-	pass
-       #self.pub.publish(self.msg)
+    	self.pub.publish(self.msg)
 
     # USE THIS FUNCTION IF CHANGEABLE SPEED IS NEEDED
     def set_speed(self,angle):
@@ -149,7 +148,7 @@ class pure_pursuit:
 
     # USE THIS FUNCTION IF CONSTANT SPEED IS NEEDED
     def const_speed(self,angle):
-        self.LOOKAHEAD_DISTANCE = 1
+        self.LOOKAHEAD_DISTANCE = 2
         self.msg.angle = angle
         self.msg.velocity = self.VELOCITY
 
