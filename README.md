@@ -1,4 +1,4 @@
-# Racecar-Local-Planner-
+# Racecar-Pure_Pursuit-Planner
 ROS package for a motion planner used in head-to-head autonomous racing.
 
 The ROS package works coupled with the F110 repository for simulations. 
@@ -28,6 +28,9 @@ following command.<br />
 
 
 For any issues mail on sidsingh@seas.upenn.edu or Singh.sid930@gmail.com
+
+This is the reference video: 
+https://www.youtube.com/watch?v=UBTp22Loq4o&feature=youtu.be
 
 
 ![](ppt.gif)
